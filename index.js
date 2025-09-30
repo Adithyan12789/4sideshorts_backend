@@ -6,7 +6,7 @@ const app = express();
 const cors = require("cors");
 
 app.use(cors({
-  origin: "https://foursideshorts-backend.onrender.com",  // your frontend domain
+  origin: "https://4sideshorts-frontend.vercel.app",  // your frontend domain
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
