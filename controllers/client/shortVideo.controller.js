@@ -174,7 +174,7 @@ exports.retrieveMovieSeriesVideosForUser = async (req, res) => {
             movieSeriesName: 1,
             movieSeriesDescription: 1,
             movieSeriesThumbnail: {
-              $concat: [baseUrl, "/admin/FilmPoster","$movieSeriesThumbnail"],
+              $concat: [baseUrl, "/admin/NewsChannelPoster","$movieSeriesThumbnail"],
             },
             movieSeriesMaxAdsForFreeView: 1,
             isAddedList: 1,
@@ -186,7 +186,7 @@ exports.retrieveMovieSeriesVideosForUser = async (req, res) => {
                 in: {
                   _id: "$$video._id",
                   episodeNumber: "$$video.episodeNumber",
-                  videoImage: { $concat: [baseUrl, "/admin/FilmPoster","$$video.videoImage"] },
+                  videoImage: { $concat: [baseUrl, "/admin/NewsChannelPoster","$$video.videoImage"] },
                   videoUrl: {
                     $cond: [
                       {
@@ -335,7 +335,7 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
           $project: {
             _id: 1,
             episodeNumber: 1,
-            videoImage: { $concat: [baseUrl, "/admin/FilmPoster","$videoImage"] },
+            videoImage: { $concat: [baseUrl, "/admin/NewsChannelPoster","$videoImage"] },
             videoUrl: {
                     $cond: [
                       {
@@ -993,7 +993,7 @@ exports.loadMovieSeriesVideosForUser = async (req, res) => {
           title: 1,
           description: 1,
           episodeNumber: 1,
-          videoImage: { $concat: [baseUrl, "/admin/FilmPoster","$videoImage"] },
+          videoImage: { $concat: [baseUrl, "/admin/NewsChannelPoster","$videoImage"] },
           videoUrl: {
                     $cond: [
                       {

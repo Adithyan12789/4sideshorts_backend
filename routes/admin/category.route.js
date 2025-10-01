@@ -20,7 +20,7 @@ route.put("/modifyActiveState", checkAccessWithSecretKey(), categoryController.m
 route.get("/fetchCategory", checkAccessWithSecretKey(), categoryController.fetchCategory);
 
 //get category ( dropdown )
-route.get("/getNewsCategoryOptions", checkAccessWithSecretKey(), categoryController.getFilmCategoryOptions);
+route.get("/getNewsCategoryOptions", checkAccessWithSecretKey(), categoryController.getNewsCategoryOptions);
 
 //delete category
 route.delete("/deleteCategory", checkAccessWithSecretKey(), categoryController.deleteCategory);

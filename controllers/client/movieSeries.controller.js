@@ -60,7 +60,7 @@ exports.fetchNewReleasesForUser = async (req, res) => {
     const baseUrl = process.env.WASABI_URL || `${req.protocol}://${req.get("host")}`;
     const formattedVideos = videos.map((video) => ({
       ...video,
-      thumbnail: video.thumbnail ? `${baseUrl}/admin/FilmPoster${video.thumbnail}` : null,
+      thumbnail: video.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${video.thumbnail}` : null,
     }));
 
     return res.status(200).json({
@@ -147,7 +147,7 @@ exports.getMoviesGroupedByCategory = async (req, res) => {
       ...group,
       movies: group.movies.map((movie) => ({
         ...movie,
-        thumbnail: movie.thumbnail ? `${baseUrl}/admin/FilmPoster${movie.thumbnail}` : null,
+        thumbnail: movie.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${movie.thumbnail}` : null,
       })),
     }));
 
@@ -180,7 +180,7 @@ exports.getTrendingMoviesSeries = async (req, res) => {
 
     const formattedItems = trendingItems.map((item) => ({
       ...item,
-      thumbnail: item.thumbnail ? `${baseUrl}/admin/FilmPoster${item.thumbnail}` : null,
+      thumbnail: item.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${item.thumbnail}` : null,
     }));
 
     return res.status(200).json({
@@ -280,7 +280,7 @@ exports.findContentBySearch = async (req, res) => {
     const baseUrl = process.env.WASABI_URL || `${req.protocol}://${req.get("host")}`;
     const formattedResponse = response.map((item) => ({
       ...item,
-      thumbnail: item.thumbnail ? `${baseUrl}/admin/FilmPoster${item.thumbnail}` : null,
+      thumbnail: item.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${item.thumbnail}` : null,
     }));
 
     return res.status(200).json({ status: true, message: "Success", searchData: formattedResponse });
@@ -345,7 +345,7 @@ exports.fetchLatestContentForUser = async (req, res) => {
 
       const formattedVideos = videos.map((item) => ({
         ...item,
-        thumbnail: item.thumbnail ? `${baseUrl}/admin/FilmPoster${item.thumbnail}` : null,
+        thumbnail: item.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${item.thumbnail}` : null,
       }));
 
       return res.status(200).json({ status: true, message: "Retrieved the latest new releases.", videos: formattedVideos });
@@ -361,7 +361,7 @@ exports.fetchLatestContentForUser = async (req, res) => {
 
       const formattedVideos = videos.map((item) => ({
         ...item,
-        thumbnail: item.thumbnail ? `${baseUrl}/admin/FilmPoster/${item.thumbnail}` : null,
+        thumbnail: item.thumbnail ? `${baseUrl}/admin/NewsChannelPoster/${item.thumbnail}` : null,
       }));
 
       return res.status(200).json({ status: true, message: "Retrieved the latest new releases.", videos: formattedVideos });
@@ -435,7 +435,7 @@ exports.fetchMoviesGroupedByGenre = async (req, res) => {
       ...group,
       movies: group.movies.map((movie) => ({
         ...movie,
-        thumbnail: movie.thumbnail ? `${baseUrl}/admin/FilmPoster${movie.thumbnail}` : null,
+        thumbnail: movie.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${movie.thumbnail}` : null,
       })),
     }));
 
@@ -518,7 +518,7 @@ exports.fetchMediaCollection = async (req, res) => {
 
     const formattedVideos = videos.map((video) => ({
       ...video,
-      thumbnail: video.thumbnail ? `${baseUrl}/admin/FilmPoster${video.thumbnail}` : null,
+      thumbnail: video.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${video.thumbnail}` : null,
     }));
 
     return res.status(200).json({
@@ -620,7 +620,7 @@ exports.getContentBySearch = async (req, res) => {
 
     const formattedVideos = videos.map((video) => ({
       ...video,
-      thumbnail: video.thumbnail ? `${baseUrl}/admin/FilmPoster${video.thumbnail}` : null,
+      thumbnail: video.thumbnail ? `${baseUrl}/admin/NewsChannelPoster${video.thumbnail}` : null,
     }));
 
     return res.status(200).json({

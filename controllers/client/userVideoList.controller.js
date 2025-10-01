@@ -61,7 +61,7 @@ exports.videoAddedToMyListByUser = async (req, res) => {
         message: "MovieSeries removed from your list.",
         isAddedToList: false,
         movieSeriesThumbnail: movieSeries.thumbnail
-          ? `${baseUrl}/admin/FilmPoster${movieSeries.thumbnail}`
+          ? `${baseUrl}/admin/NewsChannelPoster${movieSeries.thumbnail}`
           : null,
       });
     } else {
@@ -136,7 +136,7 @@ exports.getAllVideosAddedToMyListByUser = async (req, res) => {
           ? {
               ...v.movieSeries,
               thumbnail: v.movieSeries.thumbnail
-                ? `${baseUrl}/admin/FilmPoster${v.movieSeries.thumbnail}`
+                ? `${baseUrl}/admin/NewsChannelPoster${v.movieSeries.thumbnail}`
                 : null,
             }
           : null,

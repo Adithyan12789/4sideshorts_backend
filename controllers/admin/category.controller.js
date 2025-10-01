@@ -172,7 +172,7 @@ exports.fetchCategory = async (req, res) => {
 };
 
 //get category ( dropdown )
-exports.getFilmCategoryOptions = async (req, res) => {
+exports.getNewsCategoryOptions = async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true }).lean().sort({ createdAt: -1 });
 
