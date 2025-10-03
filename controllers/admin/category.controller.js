@@ -4,7 +4,7 @@ const Category = require("../../models/category.model");
 const mongoose = require("mongoose");
 
 //import model
-const MovieSeries = require("../../models/movieSeries.model");
+const News = require("../../models/news.model");
 const ShortVideo = require("../../models/shortVideo.model");
 const History = require("../../models/history.model");
 const UserVideoList = require("../../models/userVideoList.model");
@@ -205,11 +205,11 @@ exports.deleteCategory = async (req, res) => {
       message: "Category, associated movies/web series, and short videos deleted successfully.",
     });
 
-    const movieWebseries = await MovieSeries.find({ category: categoryId }).lean().select("_id thumbnail banner");
+    const news = await News.find({ category: categoryId }).lean().select("_id thumbnail banner");
 
-    if (movieWebseries) {
-      const movieSeriesIds = movieWebseries.map((movie) => movie._id);
-      const shortVideos = await ShortVideo.find({ movieSeries: { $in: movieSeriesIds } })
+    if (news && news.length > 0) {
+      const newsIds = movieWebseries.map((movie) => movie._id);
+      const shortVideos = await ShortVideo.find({ movieSeries: { $in: newsIds } })
         .lean()
         .select("_id videoImage videoUrl");
 
@@ -224,20 +224,22 @@ exports.deleteCategory = async (req, res) => {
       );
 
       await Promise.all([
-        ShortVideo.deleteMany({ movieSeries: { $in: movieSeriesIds } }),
-        History.deleteMany({ movieSeries: { $in: movieSeriesIds } }),
-        UserVideoList.deleteMany({ "videos.movieSeries": { $in: movieSeriesIds } }),
-        WatchHistory.deleteMany({ movieSeries: { $in: movieSeriesIds } }),
+        ShortVideo.deleteMany({ movieSeries: { $in: newsIds } }),
+        History.deleteMany({ movieSeries: { $in: newsIds } }),
+        UserVideoList.deleteMany({ "videos.movieSeries": { $in: newsIds } }),
+        WatchHistory.deleteMany({ movieSeries: { $in: newsIds } }),
       ]);
 
       await Promise.all(
         movieWebseries.map(async (movie) => {
-          await Promise.all([movie.thumbnail ? deleteFromStorage(movie.thumbnail) : null, movie.banner ? deleteFromStorage(movie.banner) : null, MovieSeries.deleteOne({ _id: movie._id })]);
+          await Promise.all([movie.thumbnail ? deleteFromStorage(movie.thumbnail) : null, movie.banner ? deleteFromStorage(movie.banner) : null, News.deleteOne({ _id: movie._id })]);
         })
       );
 
-      await MovieSeries.deleteMany({ _id: { $in: movieSeriesIds } });
-    }
+      await News.deleteMany({ _id: { $in: newsIds } });
+    }else{
+        return res.status(404).json({ status: false, message: "There is no category."})
+    };
 
     await Category.deleteOne({ _id: categoryId });
   } catch (error) {

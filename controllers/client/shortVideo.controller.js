@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 //import model
 const User = require("../../models/user.model");
 const LikeHistoryOfVideo = require("../../models/likeHistoryOfVideo.model");
-const MovieSeries = require("../../models/movieSeries.model");
+const MovieSeries = require("../../models/news.model");
 const History = require("../../models/history.model");
 const UserVideoStatus = require("../../models/userVideoStatus.model");
 

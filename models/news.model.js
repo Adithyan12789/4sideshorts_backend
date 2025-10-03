@@ -2,7 +2,7 @@ const { CONTENT_TYPE } = require("../types/constant");
 
 const mongoose = require("mongoose");
 
-const movieSeriesSchema = new mongoose.Schema(
+const newsSchema = new mongoose.Schema(
   {
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
     name: { type: String, trim: true, required: true },
@@ -22,7 +22,7 @@ const movieSeriesSchema = new mongoose.Schema(
   }
 );
 
-movieSeriesSchema.index({ isActive: 1 });
-movieSeriesSchema.index({ releaseDate: -1 });
+newsSchema.index({ isActive: 1 });
+newsSchema.index({ releaseDate: -1 });
 
-module.exports = new mongoose.model("MovieSeries", movieSeriesSchema);
+module.exports = new mongoose.model("MovieSeries", newsSchema);

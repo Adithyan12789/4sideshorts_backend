@@ -1,6 +1,6 @@
 const UserVideoList = require("../../models/userVideoList.model");
 const User = require("../../models/user.model");
-const MovieSeries = require("../../models/movieSeries.model");
+const News = require("../../models/news.model");
 const mongoose = require("mongoose");
 
 // video added to own list Or remove from own list by user
@@ -21,7 +21,7 @@ exports.videoAddedToMyListByUser = async (req, res) => {
 
     const [user, movieSeries, existingList] = await Promise.all([
       User.findOne({ _id: userObjectId }).lean().select("_id isBlock name"),
-      MovieSeries.findOne({ _id: movieSeriesObjectId })
+      News.findOne({ _id: movieSeriesObjectId })
         .lean()
         .select("_id thumbnail"),
       UserVideoList.findOne({

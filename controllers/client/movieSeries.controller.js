@@ -1,4 +1,4 @@
-const MovieSeries = require("../../models/movieSeries.model");
+const MovieSeries = require("../../models/news.model");
 
 //import model
 const Category = require("../../models/category.model");

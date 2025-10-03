@@ -1,7 +1,7 @@
 const Category = require("../../models/category.model");
 
 //import model
-const MovieSeries = require("../../models/movieSeries.model");
+const MovieSeries = require("../../models/news.model");
 const User = require("../../models/user.model");
 
 //mongoose

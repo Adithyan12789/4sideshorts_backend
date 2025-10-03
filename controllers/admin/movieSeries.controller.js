@@ -1,4 +1,4 @@
-const MovieSeries = require("../../models/movieSeries.model");
+const News = require("../../models/news.model");
 
 //import model
 const Category = require("../../models/category.model");
@@ -52,7 +52,7 @@ exports.createContent = async (req, res) => {
     const thumbnailPath = `/${req.body.thumbnail.split("/").pop()}`;
     const bannerPath = `/${req.body.banner.split("/").pop()}`;
 
-    const newContent = new MovieSeries({
+    const newContent = new News({
       name,
       description,
       thumbnail: thumbnailPath,
@@ -96,7 +96,7 @@ exports.updateContent = async (req, res) => {
     }
 
     const movieWebseriesId = new mongoose.Types.ObjectId(req.body.movieWebseriesId);
-    const movieWebseries = await MovieSeries.findById(movieWebseriesId);
+    const movieWebseries = await News.findById(movieWebseriesId);
     if (!movieWebseries) {
       await Promise.all([
         req.body.thumbnail && deleteFromStorage(req.body.thumbnail),
@@ -173,7 +173,7 @@ exports.toggleTrendingStatus = async (req, res) => {
         .json({ status: false, message: "Invalid movieWebseries ID." });
     }
 
-    const movieWebseries = await MovieSeries.findById(movieWebseriesId);
+    const movieWebseries = await News.findById(movieWebseriesId);
     if (!movieWebseries) {
       return res
         .status(200)
@@ -212,7 +212,7 @@ exports.toggleAutoAnimateBanner = async (req, res) => {
       req.query.movieWebseriesId
     );
 
-    const movieWebseries = await MovieSeries.findById(movieWebseriesId);
+    const movieWebseries = await News.findById(movieWebseriesId);
     if (!movieWebseries) {
       return res
         .status(200)
@@ -248,7 +248,7 @@ exports.toggleActiveStatus = async (req, res) => {
         .json({ status: false, message: "Invalid movieWebseries ID." });
     }
 
-    const movieWebseries = await MovieSeries.findById(movieWebseriesId);
+    const movieWebseries = await News.findById(movieWebseriesId);
     if (!movieWebseries) {
       return res
         .status(200)
@@ -278,8 +278,8 @@ exports.fetchAllMediaContent = async (req, res) => {
     const limit = req.query.limit ? parseInt(req.query.limit) : 20;
 
     const [totalMovieSeries, movieWebseries] = await Promise.all([
-      MovieSeries.countDocuments(),
-      MovieSeries.aggregate([
+      News.countDocuments(),
+      News.aggregate([
         { $sort: { createdAt: -1 } },
         { $skip: (start - 1) * limit },
         { $limit: limit },
@@ -355,7 +355,7 @@ exports.removeMovieSeries = async (req, res) => {
     }
 
     const [movieWebseries, shortVideos] = await Promise.all([
-      MovieSeries.findById(movieWebseriesId)
+      News.findById(movieWebseriesId)
         .lean()
         .select("_id thumbnail banner"),
       ShortVideo.find({ movieSeries: movieWebseriesId })
@@ -395,7 +395,7 @@ exports.removeMovieSeries = async (req, res) => {
         ? deleteFromStorage(movieWebseries.thumbnail)
         : null,
       movieWebseries.banner ? deleteFromStorage(movieWebseries.banner) : null,
-      MovieSeries.deleteOne({ _id: movieWebseries._id }),
+      News.deleteOne({ _id: movieWebseries._id }),
     ]);
   } catch (error) {
     console.error(error);

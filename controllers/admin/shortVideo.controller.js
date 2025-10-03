@@ -1,7 +1,7 @@
 const ShortVideo = require("../../models/shortVideo.model");
 
 //import model
-const MovieSeries = require("../../models/movieSeries.model");
+const News = require("../../models/news.model");
 const User = require("../../models/user.model");
 
 //mongoose
@@ -106,7 +106,7 @@ exports.createShortVideo = async (req, res) => {
     }
 
     const movieSeriesObjId = new mongoose.Types.ObjectId(movieSeriesId);
-    const movieSeries = await MovieSeries.findById(movieSeriesObjId).select("_id").lean();
+    const movieSeries = await News.findById(movieSeriesObjId).select("_id").lean();
 
     if (!movieSeries) {
       await Promise.all([

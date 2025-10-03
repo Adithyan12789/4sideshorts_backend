@@ -1,6 +1,6 @@
 const User = require("../../models/user.model");
 const Category = require("../../models/category.model");
-const MovieSeries = require("../../models/movieSeries.model");
+const News = require("../../models/news.model");
 const ShortVideo = require("../../models/shortVideo.model");
 const WithdrawRequest = require("../../models/withDrawRequest.model");
 const VipPlanHistory = require("../../models/vipPlanHistory.model");
@@ -31,7 +31,7 @@ exports.dashboardCount = async (req, res) => {
     const [totalUsers, totalCategory, totalMovieSeries, totalShortVideos, totalWithdrawRequests, vipRevenue, coinRevenue] = await Promise.all([
       User.countDocuments(dateFilterQuery),
       Category.countDocuments(dateFilterQuery),
-      MovieSeries.countDocuments(dateFilterQuery),
+      News.countDocuments(dateFilterQuery),
       ShortVideo.countDocuments(dateFilterQuery),
       WithdrawRequest.countDocuments(dateFilterQuery),
       VipPlanHistory.aggregate([
