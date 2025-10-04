@@ -1,7 +1,7 @@
 const Category = require("../../models/category.model");
 
 //import model
-const MovieSeries = require("../../models/news.model");
+const News = require("../../models/news.model");
 const User = require("../../models/user.model");
 
 //mongoose
@@ -50,7 +50,7 @@ exports.fetchGenreBasedMediaContent = async (req, res) => {
       const [user, category, videos] = await Promise.all([
         User.findOne({ _id: userObjId }).select("isBlock").lean(),
         Category.exists({ _id: new mongoose.Types.ObjectId(categoryId), isActive: true }).lean(),
-        MovieSeries.aggregate([
+        News.aggregate([
           {
             $match: {
               isActive: true,
@@ -127,7 +127,7 @@ exports.fetchGenreBasedMediaContent = async (req, res) => {
     } else {
       const [category, videos] = await Promise.all([
         Category.exists({ _id: new mongoose.Types.ObjectId(categoryId), isActive: true }).lean(),
-        MovieSeries.aggregate([
+        News.aggregate([
           {
             $match: {
               isActive: true,

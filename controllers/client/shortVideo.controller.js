@@ -186,7 +186,7 @@ exports.retrieveMovieSeriesVideosForUser = async (req, res) => {
                 in: {
                   _id: "$$video._id",
                   episodeNumber: "$$video.episodeNumber",
-                  videoImage: { $concat: [baseUrl, "/admin/NewsChannelPoster","$$video.videoImage"] },
+                  videoImage: { $concat: [baseUrl, "/admin/newsImages","$$video.videoImage"] },
                   videoUrl: {
                     $cond: [
                       {
@@ -335,7 +335,7 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
           $project: {
             _id: 1,
             episodeNumber: 1,
-            videoImage: { $concat: [baseUrl, "/admin/NewsChannelPoster","$videoImage"] },
+            videoImage: { $concat: [baseUrl, "/admin/newsImages","$videoImage"] },
             videoUrl: {
                     $cond: [
                       {
