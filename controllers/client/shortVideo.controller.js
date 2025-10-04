@@ -274,7 +274,8 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
     const [user, groupedVideos] = await Promise.all([
       User.findOne({ _id: userObjectId }).select("_id isBlock").lean(),
       ShortVideo.aggregate([
-        { $match: { episodeNumber: 0 } }, // trailers only
+        // Sort first so $group picks the earliest video for each series
+        { $sort: { createdAt: 1 } }, // or use { _id: 1 } if createdAt doesn't exist
         {
           $lookup: {
             from: "movieseries",
@@ -285,10 +286,20 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
         },
         { $unwind: "$movieSeriesDetails" },
         { $match: { "movieSeriesDetails.isActive": true } },
+
+        // 🧩 Get only the FIRST video of each movieSeries
+        {
+          $group: {
+            _id: "$movieSeriesDetails._id",
+            firstVideo: { $first: "$$ROOT" }, // keep the first one
+          },
+        },
+
+        // 🧩 Lookup for user-specific details
         {
           $lookup: {
             from: "uservideostatuses",
-            let: { videoId: "$_id" },
+            let: { videoId: "$firstVideo._id" },
             pipeline: [
               {
                 $match: {
@@ -307,7 +318,7 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
         {
           $lookup: {
             from: "uservideolists",
-            let: { movieSeriesId: "$movieSeriesDetails._id" },
+            let: { movieSeriesId: "$_id" },
             pipeline: [
               {
                 $match: {
@@ -326,71 +337,13 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
         {
           $lookup: {
             from: "likehistoryofvideos",
-            localField: "_id",
+            localField: "firstVideo._id",
             foreignField: "videoId",
             as: "likes",
           },
         },
-        {
-          $project: {
-            _id: 1,
-            episodeNumber: 1,
-            videoImage: { $concat: [baseUrl, "/admin/newsImages","$videoImage"] },
-            videoUrl: {
-                    $cond: [
-                      {
-                        $regexMatch: {
-                          input: "$videoUrl",
-                          regex: /^https:\/\/vz/,
-                        },
-                      }, // ✅ use $$video
-                      "$videoUrl", // keep as-is
-                      {
-                        $concat: [
-                          baseUrl,
-                          "/admin/newsVideos",
-                          "$videoUrl",
-                        ],
-                      },
-                    ],
-                  },
-            isLocked: {
-              $cond: [
-                { $gt: [{ $size: "$userVideoStatus" }, 0] },
-                { $arrayElemAt: ["$userVideoStatus.isLocked", 0] },
-                "$isLocked",
-              ],
-            },
-            "movieSeriesDetails._id": 1,
-            "movieSeriesDetails.name": 1,
-            "movieSeriesDetails.description": 1,
-            "movieSeriesDetails.thumbnail": {
-              $concat: [baseUrl, "$movieSeriesDetails.thumbnail"],
-            },
-            isLike: { $in: [userObjectId, "$likes.userId"] },
-            totalLikes: { $size: "$likes" },
-            isAddedList: {
-              $cond: [{ $eq: [{ $size: "$isAddedList" }, 0] }, false, true],
-            },
-            totalAddedToList: { $size: "$isAddedList" },
-          },
-        },
-        {
-          $group: {
-            _id: "$movieSeriesDetails._id",
-            movieSeriesName: { $first: "$movieSeriesDetails.name" },
-            movieSeriesDescription: {
-              $first: "$movieSeriesDetails.description",
-            },
-            movieSeriesThumbnail: { $first: "$movieSeriesDetails.thumbnail" },
-            isAddedList: { $first: "$isAddedList" },
-            totalAddedToList: { $first: "$totalAddedToList" },
-            videos: { $first: "$$ROOT" },
-            totalLockedVideos: {
-              $sum: { $cond: [{ $eq: ["$isLocked", true] }, 1, 0] },
-            },
-          },
-        },
+
+        // 🧩 Lookup total videos count per movie series
         {
           $lookup: {
             from: "shortvideos",
@@ -404,16 +357,53 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
             as: "totalVideosInfo",
           },
         },
+
+        // 🧩 Project final output
         {
           $project: {
             _id: 1,
-            movieSeriesName: 1,
-            movieSeriesDescription: 1,
-            movieSeriesThumbnail: 1,
-            isAddedList: 1,
-            totalAddedToList: 1,
-            videos: 1,
-            totalLockedVideos: 1,
+            movieSeriesName: "$firstVideo.movieSeriesDetails.name",
+            movieSeriesDescription: "$firstVideo.movieSeriesDetails.description",
+            movieSeriesThumbnail: {
+              $concat: [baseUrl, "$firstVideo.movieSeriesDetails.thumbnail"],
+            },
+            video: {
+              _id: "$firstVideo._id",
+              videoUrl: {
+                $cond: [
+                  {
+                    $regexMatch: {
+                      input: "$firstVideo.videoUrl",
+                      regex: /^https:\/\/vz/,
+                    },
+                  },
+                  "$firstVideo.videoUrl",
+                  {
+                    $concat: [
+                      baseUrl,
+                      "/admin/newsVideos",
+                      "$firstVideo.videoUrl",
+                    ],
+                  },
+                ],
+              },
+              videoImage: {
+                $concat: [baseUrl, "/admin/newsImages", "$firstVideo.videoImage"],
+              },
+              isLocked: {
+                $cond: [
+                  { $gt: [{ $size: "$userVideoStatus" }, 0] },
+                  { $arrayElemAt: ["$userVideoStatus.isLocked", 0] },
+                  "$firstVideo.isLocked",
+                ],
+              },
+              totalLikes: { $size: "$likes" },
+              isLike: { $in: [userObjectId, "$likes.userId"] },
+            },
+            isAddedList: {
+              $cond: [{ $eq: [{ $size: "$isAddedList" }, 0] }, false, true],
+            },
+            totalAddedToList: { $size: "$isAddedList" },
             totalVideos: {
               $ifNull: [
                 { $arrayElemAt: ["$totalVideosInfo.totalCount", 0] },
@@ -437,210 +427,11 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
         .status(200)
         .json({ status: false, message: "You are blocked by admin." });
 
-
-    console.log("First grouped video: ", groupedVideos[0]);
-
-    return res
-      .status(200)
-      .json({
-        status: true,
-        message: "Retrieved grouped videos by movie series.",
-        data: groupedVideos,
-      });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({
-        status: false,
-        message: error.message || "Internal Server Error",
-      });
-  }
-};
-// Retrieve all videos grouped by their associated movie series
-exports.getVideosGroupedByMovieSeries = async (req, res) => {
-  try {
-    const start = parseInt(req.query.start) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const { userId } = req.query;
-
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res
-        .status(200)
-        .json({ status: false, message: "Oops! Invalid details." });
-    }
-
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    const baseUrl =
-      process.env.WASABI_URL || `${req.protocol}://${req.get("host")}`;
-
-    const [user, groupedVideos] = await Promise.all([
-      User.findOne({ _id: userObjectId }).select("_id isBlock").lean(),
-      ShortVideo.aggregate([
-        // 🧩 removed episodeNumber filter (so all videos are included)
-        {
-          $lookup: {
-            from: "movieseries",
-            localField: "movieSeries",
-            foreignField: "_id",
-            as: "movieSeriesDetails",
-          },
-        },
-        { $unwind: "$movieSeriesDetails" },
-        { $match: { "movieSeriesDetails.isActive": true } },
-        {
-          $lookup: {
-            from: "uservideostatuses",
-            let: { videoId: "$_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ["$shortVideoId", "$$videoId"] },
-                      { $eq: ["$userId", userObjectId] },
-                    ],
-                  },
-                },
-              },
-            ],
-            as: "userVideoStatus",
-          },
-        },
-        {
-          $lookup: {
-            from: "uservideolists",
-            let: { movieSeriesId: "$movieSeriesDetails._id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ["$userId", userObjectId] },
-                      { $in: ["$$movieSeriesId", "$videos.movieSeries"] },
-                    ],
-                  },
-                },
-              },
-            ],
-            as: "isAddedList",
-          },
-        },
-        {
-          $lookup: {
-            from: "likehistoryofvideos",
-            localField: "_id",
-            foreignField: "videoId",
-            as: "likes",
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            episodeNumber: 1,
-            videoImage: {
-              $concat: [baseUrl, "/admin/newsImages", "$videoImage"],
-            },
-            videoUrl: {
-              $cond: [
-                {
-                  $regexMatch: {
-                    input: "$videoUrl",
-                    regex: /^https:\/\/vz/,
-                  },
-                },
-                "$videoUrl",
-                { $concat: [baseUrl, "/admin/newsVideos", "$videoUrl"] },
-              ],
-            },
-            isLocked: {
-              $cond: [
-                { $gt: [{ $size: "$userVideoStatus" }, 0] },
-                { $arrayElemAt: ["$userVideoStatus.isLocked", 0] },
-                "$isLocked",
-              ],
-            },
-            "movieSeriesDetails._id": 1,
-            "movieSeriesDetails.name": 1,
-            "movieSeriesDetails.description": 1,
-            "movieSeriesDetails.thumbnail": {
-              $concat: [baseUrl, "$movieSeriesDetails.thumbnail"],
-            },
-            isLike: { $in: [userObjectId, "$likes.userId"] },
-            totalLikes: { $size: "$likes" },
-            isAddedList: {
-              $cond: [{ $eq: [{ $size: "$isAddedList" }, 0] }, false, true],
-            },
-            totalAddedToList: { $size: "$isAddedList" },
-          },
-        },
-        {
-          $group: {
-            _id: "$movieSeriesDetails._id",
-            movieSeriesName: { $first: "$movieSeriesDetails.name" },
-            movieSeriesDescription: {
-              $first: "$movieSeriesDetails.description",
-            },
-            movieSeriesThumbnail: { $first: "$movieSeriesDetails.thumbnail" },
-            isAddedList: { $first: "$isAddedList" },
-            totalAddedToList: { $first: "$totalAddedToList" },
-            videos: { $push: "$$ROOT" }, // ⬅ changed from $first to $push to include all videos
-            totalLockedVideos: {
-              $sum: { $cond: [{ $eq: ["$isLocked", true] }, 1, 0] },
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "shortvideos",
-            let: { movieSeriesId: "$_id" },
-            pipeline: [
-              {
-                $match: { $expr: { $eq: ["$movieSeries", "$$movieSeriesId"] } },
-              },
-              { $count: "totalCount" },
-            ],
-            as: "totalVideosInfo",
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            movieSeriesName: 1,
-            movieSeriesDescription: 1,
-            movieSeriesThumbnail: 1,
-            isAddedList: 1,
-            totalAddedToList: 1,
-            videos: 1,
-            totalLockedVideos: 1,
-            totalVideos: {
-              $ifNull: [
-                { $arrayElemAt: ["$totalVideosInfo.totalCount", 0] },
-                0,
-              ],
-            },
-          },
-        },
-        { $sort: { _id: 1 } },
-        { $skip: (start - 1) * limit },
-        { $limit: limit },
-      ]),
-    ]);
-
-    if (!user)
-      return res
-        .status(200)
-        .json({ status: false, message: "User not found." });
-    if (user.isBlock)
-      return res
-        .status(200)
-        .json({ status: false, message: "You are blocked by admin." });
-
-    console.log("First grouped video: ", groupedVideos[0]);
+    console.log("First grouped video:", groupedVideos[0]);
 
     return res.status(200).json({
       status: true,
-      message: "Retrieved grouped videos by movie series.",
+      message: "Retrieved first videos of each movie series successfully.",
       data: groupedVideos,
     });
   } catch (error) {
@@ -651,6 +442,7 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
     });
   }
 };
+
 
 // Create or remove like for a video
 exports.likeOrDislikeOfVideo = async (req, res) => {
