@@ -186,7 +186,7 @@ exports.retrieveMovieSeriesVideosForUser = async (req, res) => {
                 in: {
                   _id: "$$video._id",
                   episodeNumber: "$$video.episodeNumber",
-                  videoImage: { $concat: [baseUrl, "/admin/newsImages","$$video.videoImage"] },
+                  videoImage: { $concat: [baseUrl, "/admin/NewsChannelPoster","$$video.videoImage"] },
                   videoUrl: {
                     $cond: [
                       {
@@ -442,7 +442,6 @@ exports.getVideosGroupedByMovieSeries = async (req, res) => {
     });
   }
 };
-
 
 // Create or remove like for a video
 exports.likeOrDislikeOfVideo = async (req, res) => {
